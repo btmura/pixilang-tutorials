@@ -1,0 +1,79 @@
+// Define paths to the SunVox library referred by the header file we then include.
+SUNVOX_LIB_WIN32 = "../sunvox_dll/windows/lib_x86/sunvox.dll"
+SUNVOX_LIB_ANDROID_ARM = "../sunvox_dll/linux_android/lib_arm/armeabi/sunvox.so"
+SUNVOX_LIB_ANDROID_ARM_V7A = "../sunvox_dll/linux_android/lib_arm/armeabi-v7a/sunvox.so"
+SUNVOX_LIB_ANDROID_X86 = "../sunvox_dll/linux_android/lib_x86/sunvox.so"
+SUNVOX_LIB_LINUX_X86 = "../sunvox_dll/linux/lib_x86/sunvox.so"
+SUNVOX_LIB_LINUX_X86_64 = "../sunvox_dll/linux/lib_x86_64/sunvox.so"
+SUNVOX_LIB_OSX_X86_64 = "../sunvox_dll/osx/lib_x86_64/sunvox.dylib"
+include "../sunvox_dll/headers/sunvox.pixi"
+
+// Load the library and bind functions that start with sv_*
+if sv_load_dll() == -1 {
+  exit(-1)
+}
+
+// Ask the user to select a SunVox file. Store the state in the temporary directory.
+file = file_dialog("Select a sunvox file...", "sunvox", "3:/file_dialog_state")
+if file == -1 {
+  exit(-1)
+}
+
+// Initialize the Sunvox library.
+version = dlcall(svl, sv_init, -1, 44100, 2, SV_INIT_FLAG_USER_AUDIO_CALLBACK | SV_INIT_FLAG_AUDIO_INT16)
+if version >= 0 {
+
+  // Print out the library version for info.
+  major = (version >> 16) & 255
+  minor1 = (version >> 8) & 255
+  minor2 = (version >> 0) & 255
+  printf("SunVox library version: %d.%d.%d\n", major, minor1, minor2)
+
+  // Get ticks per second for system and SunVox.
+  ticks_per_second = get_tps()
+  sv_ticks_per_second = dlcall(svl, sv_get_ticks_per_second)
+
+  // Create buffer for audio data and initialize audio callback.
+  audio_buffer = new(16000, 1, INT16)
+  set_audio_callback(audio_callback, 0, 44100, INT16, 2, AUDIO_FLAG_INTERP2)
+
+  // Start playing the file from the beginning.
+  dlcall(svl, sv_open_slot, 0)
+  dlcall(svl, sv_load, 0, file)
+  dlcall(svl, sv_set_autostop, 0, 1)
+  dlcall(svl, sv_play_from_beginning, 0)
+
+  // Loop until the song ends. 
+  while 1 { 
+    if dlcall(svl, sv_end_of_song, 0) {
+      break
+    }
+  }
+
+  // Stop playing and clean up.
+  dlcall(svl, sv_stop, 0)
+  dlcall(svl, sv_close_slot, 0)
+  set_audio_callback(-1)
+  remove(audio_buffer)
+  dlcall(svl, sv_deinit)
+}
+
+sv_unload_dll()
+
+fn audio_callback($stream, $userdata, $channels, $frames, $out_time, $in_channels, $latency) {
+  $current_ticks = get_ticks()
+  $current_sunvox_ticks = dlcall(svl, sv_get_ticks)
+  $delay = ($out_time - $current_ticks) & 0xFFFFFFFF
+  $sunvox_delay = ($delay * sv_ticks_per_second) div ticks_per_second
+
+  // Fill audio buffer with data from SunVox.
+  dlcall(svl, sv_audio_callback, audio_buffer, $frames, $latency, $current_sunvox_ticks + $sunvox_delay)
+
+  // Copy contents from audio buffer to the channels.
+  copy($channels[0], audio_buffer, 0, 0, $frames, 1, 2)
+  copy($channels[1], audio_buffer, 0, 1, $timeframes, 1, 2)
+
+  ret(1)
+}
+
+
