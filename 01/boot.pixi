@@ -71,7 +71,7 @@ fn audio_callback($stream, $userdata, $channels, $frames, $out_time, $in_channel
 
   // Copy contents from audio buffer to the channels.
   copy($channels[0], audio_buffer, 0, 0, $frames, 1, 2)
-  copy($channels[1], audio_buffer, 0, 1, $timeframes, 1, 2)
+  copy($channels[1], audio_buffer, 0, 1, $frames, 1, 2)
 
   ret(1)
 }
