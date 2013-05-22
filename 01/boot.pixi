@@ -13,8 +13,9 @@ if sv_load_dll() == -1 {
   exit(-1)
 }
 
-// Ask the user to select a SunVox file. Store the state in the temporary directory.
-file = file_dialog("Select a sunvox file...", "sunvox", "3:/file_dialog_state")
+// Ask the user to select a SunVox file. 
+// The state is stored in the user's home directory which can't be changed at the moment.
+file = file_dialog("Select a sunvox file...", "sunvox", "pixilang-file-dialog")
 if file == -1 {
   exit(-1)
 }
