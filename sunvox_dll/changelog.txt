@@ -1,0 +1,17 @@
+v1.7.3b (29 apr 2013):
+* added iOS sample project + iOS library;
+* added Android sample project + Android library for Java developers;
+* Android version is now compatible with JNI and with Native Activity;
+* new function: sv_get_module_scope2( int slot, int mod_num, int channel, signed short* read_buf, unsigned int samples_to_read ); use it instead of sv_get_module_scope();
+* bugs fixed.
+v1.7.3 (13 apr 2013):
+* new function: sv_load_from_memory( int slot, void* data, unsigned int data_size );
+* engine optimization;
+* bugs fixed.
+v1.7.3 BETA1 (24 dec 2012):
+* added Android version;
+* new functions: sv_lock_slot(), sv_unlock_slot(), sv_pattern_mute();
+* bugs fixed.
+v1.7.2b (22 sep 2012):
+* new functions for working with pattern data directly;
+* bugs fixed.
