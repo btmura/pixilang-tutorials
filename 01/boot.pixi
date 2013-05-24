@@ -46,6 +46,7 @@ if version >= 0 {
 
   // Loop until the song ends. 
   while 1 { 
+    sleep(50)
     if dlcall(svl, sv_end_of_song, 0) {
       break
     }
