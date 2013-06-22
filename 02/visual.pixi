@@ -1,0 +1,11 @@
+fn vz_init($svl) {
+	
+}
+
+fn vz_draw($svl) {
+
+}
+
+fn vz_deinit($svl) {
+
+}

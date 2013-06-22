@@ -8,27 +8,30 @@ SUNVOX_LIB_LINUX_X86_64 = "../sunvox_dll/linux/lib_x86_64/sunvox.so"
 SUNVOX_LIB_OSX_X86_64 = "../sunvox_dll/osx/lib_x86_64/sunvox.dylib"
 include "../sunvox_dll/headers/sunvox.pixi"
 
-// Load the library and bind functions that start with sv_*
+// Include our visualization code that has functions starting with vz_*.
+include "visual.pixi"
+
+// Load the library and bind functions that start with sv_*.
 if sv_load_dll() == -1 {
   exit(-1)
 }
 
 // Ask the user to select a SunVox file. 
 // The state is stored in the user's home directory which can't be changed at the moment.
-file = file_dialog("Select a sunvox file...", "sunvox", "pixilang-file-dialog")
-if file == -1 {
+$file = file_dialog("Select a sunvox file...", "sunvox", "pixilang-file-dialog")
+if $file == -1 {
   exit(-1)
 }
 
 // Initialize the Sunvox library.
-version = dlcall(svl, sv_init, -1, 44100, 2, SV_INIT_FLAG_USER_AUDIO_CALLBACK | SV_INIT_FLAG_AUDIO_INT16)
-if version >= 0 {
+$version = dlcall(svl, sv_init, -1, 44100, 2, SV_INIT_FLAG_USER_AUDIO_CALLBACK | SV_INIT_FLAG_AUDIO_INT16)
+if $version >= 0 {
 
   // Print out the library version for info.
-  major = (version >> 16) & 255
-  minor1 = (version >> 8) & 255
-  minor2 = (version >> 0) & 255
-  printf("SunVox library version: %d.%d.%d\n", major, minor1, minor2)
+  $major = ($version >> 16) & 255
+  $minor1 = ($version >> 8) & 255
+  $minor2 = ($version >> 0) & 255
+  printf("SunVox library version: %d.%d.%d\n", $major, $minor1, $minor2)
 
   // Get ticks per second for system and SunVox.
   ticks_per_second = get_tps()
@@ -40,17 +43,64 @@ if version >= 0 {
 
   // Start playing the file from the beginning.
   dlcall(svl, sv_open_slot, 0)
-  dlcall(svl, sv_load, 0, file)
+  dlcall(svl, sv_load, 0, $file)
   dlcall(svl, sv_set_autostop, 0, 1)
   dlcall(svl, sv_play_from_beginning, 0)
 
-  // Loop until the song ends. 
-  while 1 { 
-    sleep(50)
-    if dlcall(svl, sv_end_of_song, 0) {
-      break
+  // Initialize our visualization code.
+  vz_init(svl)
+
+  // Loop until the song ends or the user quits. 
+  $loop = 1
+  while $loop {
+    // Draw stuff on the screen for one frame. 
+    vz_draw(svl)
+
+    // Check events to see if we should quit after this iteration.
+    while get_event() {
+      if EVT[EVT_TYPE] == EVT_QUIT {
+        printf("Quit event received\n")
+        $loop = 0
+        break
+      }
     }
+
+    // Quit after this iteration if the song is over.
+    if dlcall(svl, sv_end_of_song, 0) {
+      printf("End of song reached\n")
+      $loop = 0
+    }
+
+    // Remember the prior ticks and save the current ticks.
+    // Ticks are a way to track the progression of time.
+    $prev_ticks = $curr_ticks
+    $curr_ticks = get_ticks()
+
+    if $prev_ticks != 0 {
+      // Determine how many ticks occurred since the last frame.
+      // Ticks are 32-bit so apply the 0xFFFFFFFF mask.
+      $delta_ticks = ($curr_ticks - $prev_ticks) & 0xFFFFFFFF
+
+      // Convert the ticks into milliseconds.
+      $delta_ms = ($delta_ticks / ticks_per_second) * 1000;
+
+      // Plan to update at most 32 times a second.
+      $target_delay_ms = 1000 / 32
+
+      // Sleep the target delay amount or don't sleep if behind.
+      $delay_ms = $target_delay_ms - $delta_ms
+      if $delay_ms > 0 {
+        printf("Sleeping: %3d ms\n", $delay_ms)
+        sleep($delay_ms)
+      }
+    }
+
+    // Transfer the screen to the display.
+    frame()
   }
+
+  // Deinitialize our visualization code.
+  vz_deinit(svl)
 
   // Stop playing and clean up.
   dlcall(svl, sv_stop, 0)
