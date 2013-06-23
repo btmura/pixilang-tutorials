@@ -88,8 +88,8 @@ if $version >= 0 {
       // Convert the ticks into milliseconds.
       $delta_ms = ($delta_ticks / ticks_per_second) * 1000;
 
-      // Plan to update at most 32 times a second.
-      $target_delay_ms = 1000 / 32
+      // Plan to update at most 30 times a second.
+      $target_delay_ms = 1000 / 30
 
       // Sleep the target delay amount or don't sleep if behind.
       $delay_ms = $target_delay_ms - $delta_ms

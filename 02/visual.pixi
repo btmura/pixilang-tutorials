@@ -49,7 +49,7 @@ fn visual_init($svl) {
 		module_y.min = min(module_y.min, module_y[$i])
 		module_y.max = max(module_y.max, module_y[$i])
 
-		printf("Module %2d x: %3d y: %3d c: %8d e: %1d l: %2d\n", $i, 
+		printf("Module %2d  x: %3d  y: %3d  c: %8d  e: %1d  l: %2d\n", $i, 
 			module_x[$i], 
 			module_y[$i], 
 			module_color[$i], 
