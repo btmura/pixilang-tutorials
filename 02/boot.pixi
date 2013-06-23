@@ -8,7 +8,11 @@ SUNVOX_LIB_LINUX_X86_64 = "../sunvox_dll/linux/lib_x86_64/sunvox.so"
 SUNVOX_LIB_OSX_X86_64 = "../sunvox_dll/osx/lib_x86_64/sunvox.dylib"
 include "../sunvox_dll/headers/sunvox.pixi"
 
-// Include our visualization code that has functions starting with vz_*.
+// Include files containing helper functions used in our visualization.
+include "math.pixi"
+include "util.pixi"
+
+// Include our visualization code that has functions starting with visual_*.
 include "visual.pixi"
 
 // Load the library and bind functions that start with sv_*.
@@ -48,13 +52,13 @@ if $version >= 0 {
   dlcall(svl, sv_play_from_beginning, 0)
 
   // Initialize our visualization code.
-  vz_init(svl)
+  visual_init(svl)
 
   // Loop until the song ends or the user quits. 
   $loop = 1
   while $loop {
     // Draw stuff on the screen for one frame. 
-    vz_draw(svl)
+    visual_draw(svl)
 
     // Check events to see if we should quit after this iteration.
     while get_event() {
@@ -90,7 +94,6 @@ if $version >= 0 {
       // Sleep the target delay amount or don't sleep if behind.
       $delay_ms = $target_delay_ms - $delta_ms
       if $delay_ms > 0 {
-        printf("Sleeping: %3d ms\n", $delay_ms)
         sleep($delay_ms)
       }
     }
@@ -100,7 +103,7 @@ if $version >= 0 {
   }
 
   // Deinitialize our visualization code.
-  vz_deinit(svl)
+  visual_deinit(svl)
 
   // Stop playing and clean up.
   dlcall(svl, sv_stop, 0)

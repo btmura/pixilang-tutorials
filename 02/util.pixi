@@ -1,0 +1,12 @@
+// must_load loads the image or halts the program entirely.
+fn must_load($file_path) {
+	$container = load($file_path)
+	if $container > 0 {
+		printf("Loaded: %s\n", $file_path)
+		ret($container)
+	} else {
+		printf("Couldn't load: %s\n", $file_path)
+		halt
+	}
+}
+
