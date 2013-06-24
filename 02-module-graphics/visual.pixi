@@ -65,10 +65,10 @@ fn visual_init($svl) {
 }
 
 fn visual_draw($svl) {
-  clear()
+	clear()
 
 	// Draw the modules to take up the entire screen.
-  $screen = get_screen()
+	$screen = get_screen()
 	$width = get_xsize($screen)
 	$height = get_ysize($screen)
 	draw_modules($svl, 0, 0, $width, $height)
