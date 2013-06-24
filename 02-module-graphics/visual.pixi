@@ -30,31 +30,34 @@ fn visual_init($svl) {
 		module_exists[$i] = ($flags & SV_MODULE_FLAG_EXISTS) != 0
 		module_link_count[$i] = ($flags & SV_MODULE_OUTPUTS_MASK) >> SV_MODULE_OUTPUTS_OFF
 
-		// Get the module color and convert it to what pixilang wants.
-		$color = dlcall($svl, sv_get_module_color, 0, $i)
-		module_color[$i] = get_color(
-			($color >> 0) & 255, 
-			($color >> 8) & 255,
-			($color >> 16) & 255)
+		// Only record info about modules that exist. Module that don't exist don't have any position,
+		// so they can mess up our calculations.
+		if module_exists[$i] {
+			// Get the module color and convert it to what pixilang wants.
+			$color = dlcall($svl, sv_get_module_color, 0, $i)
+			module_color[$i] = get_color(
+				($color >> 0) & 255, 
+				($color >> 8) & 255,
+				($color >> 16) & 255)
 
-		// Get the module coordinates and split them into separate X and Y coordinates.
-		$xy = dlcall($svl, sv_get_module_xy, 0, $i)
-		module_x[$i] = $xy & 0xFFFF
-		module_y[$i] = $xy >> 16
+			// Get the module coordinates and split them into separate X and Y coordinates.
+			$xy = dlcall($svl, sv_get_module_xy, 0, $i)
+			module_x[$i] = $xy & 0xFFFF
+			module_y[$i] = $xy >> 16
 
-		// Update the min and max values for the x and y coordinates.
-		module_x.min = min(module_x.min, module_x[$i])
-		module_x.max = max(module_x.max, module_x[$i])
+			// Update the min and max values for the x and y coordinates.
+			module_x.min = min(module_x.min, module_x[$i])
+			module_x.max = max(module_x.max, module_x[$i])
 
-		module_y.min = min(module_y.min, module_y[$i])
-		module_y.max = max(module_y.max, module_y[$i])
+			module_y.min = min(module_y.min, module_y[$i])
+			module_y.max = max(module_y.max, module_y[$i])
 
-		printf("Module %2d  x: %3d  y: %3d  c: %8d  e: %1d  l: %2d\n", $i, 
-			module_x[$i], 
-			module_y[$i], 
-			module_color[$i], 
-			module_exists[$i],
-			module_link_count[$i])
+			printf("Module %2d  x: %3d  y: %3d  c: %8d  l: %2d\n", $i, 
+				module_x[$i], 
+				module_y[$i], 
+				module_color[$i],
+				module_link_count[$i])
+		}
 
 		$i + 1
 	}
