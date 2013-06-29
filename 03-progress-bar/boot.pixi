@@ -51,6 +51,9 @@ if $version >= 0 {
 	dlcall(svl, sv_set_autostop, 0, 1)
 	dlcall(svl, sv_play_from_beginning, 0)
 
+	song_current_frame = 0
+	song_frames = dlcall(svl, sv_get_song_length_frames, 0)
+
 	// Initialize our visualization code.
 	visual_init(svl)
 
@@ -123,6 +126,8 @@ fn audio_callback($stream, $userdata, $channels, $frames, $out_time, $in_channel
 
 	// Fill audio buffer with data from SunVox.
 	dlcall(svl, sv_audio_callback, audio_buffer, $frames, $latency, $current_sunvox_ticks + $sunvox_delay)
+
+	song_current_frame + $frames
 
 	// Copy contents from audio buffer to the channels.
 	copy($channels[0], audio_buffer, 0, 0, $frames, 1, 2)

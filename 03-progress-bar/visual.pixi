@@ -74,7 +74,20 @@ fn visual_draw($svl) {
 	$screen = get_screen()
 	$width = get_xsize($screen)
 	$height = get_ysize($screen)
-	draw_modules($svl, 0, 0, $width, $height)
+
+	$half_width = $width / 2
+	$half_height = $height / 2
+
+	$modules_width = $width * 0.95
+	$modules_height = $height * 0.85
+	$bar_width = $width * 0.95
+	$bar_height = $height * 0.03
+	
+	$modules_y = -$bar_height / 2
+	$bar_y = $half_height - $bar_height / 2
+
+	draw_modules($svl, 0, $modules_y, $modules_width, $modules_height)
+	draw_progress_bar($svl, 0, $bar_y, $bar_width, $bar_height)
 }
 
 fn draw_modules($svl, $center_x, $center_y, $width, $height) {
@@ -135,6 +148,30 @@ fn draw_modules($svl, $center_x, $center_y, $width, $height) {
 
 	remove($x)
 	remove($y)
+}
+
+fn draw_progress_bar($svl, $center_x, $center_y, $width, $height) {
+	$half_width = $width / 2
+	$half_height = $height / 2
+
+	$outer_x = $center_x - $half_width
+	$outer_y = $center_y - $half_height
+	$outer_width = $width
+	$outer_height = $height
+
+	box($outer_x, $outer_y, $outer_width, $outer_height, WHITE)
+
+	$padding = 2
+	$current = song_current_frame div 44100 
+	$length = song_frames div 44100
+	$progress_percentage = $current / $length
+
+	$inner_x = $outer_x + $padding
+	$inner_y = $outer_y + $padding
+	$inner_width = ($width - $padding * 2) * $progress_percentage
+	$inner_height = $height - $padding * 2
+
+	fbox($inner_x, $inner_y, $inner_width, $inner_height, WHITE)
 }
 
 fn visual_deinit($svl) {
