@@ -20,7 +20,7 @@ if sv_load_dll() == -1 {
 	exit(-1)
 }
 
-// Ask the user to select a SunVox file. 
+// Ask the user to select a SunVox file.
 // The state is stored in the user's home directory which can't be changed at the moment.
 $file = file_dialog("Select a sunvox file...", "sunvox", "pixilang-file-dialog")
 if $file == -1 {
@@ -57,10 +57,10 @@ if $version >= 0 {
 	// Initialize our visualization code.
 	visual_init(svl)
 
-	// Loop until the song ends or the user quits. 
+	// Loop until the song ends or the user quits.
 	$loop = 1
 	while $loop {
-		// Draw stuff on the screen for one frame. 
+		// Draw stuff on the screen for one frame.
 		visual_draw(svl)
 
 		// Check events to see if we should quit after this iteration.

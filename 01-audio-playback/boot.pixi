@@ -13,7 +13,7 @@ if sv_load_dll() == -1 {
 	exit(-1)
 }
 
-// Ask the user to select a SunVox file. 
+// Ask the user to select a SunVox file.
 // The state is stored in the user's home directory which can't be changed at the moment.
 file = file_dialog("Select a sunvox file...", "sunvox", "pixilang-file-dialog")
 if file == -1 {
@@ -44,8 +44,8 @@ if version >= 0 {
 	dlcall(svl, sv_set_autostop, 0, 1)
 	dlcall(svl, sv_play_from_beginning, 0)
 
-	// Loop until the song ends. 
-	while 1 { 
+	// Loop until the song ends.
+	while 1 {
 		sleep(50)
 		if dlcall(svl, sv_end_of_song, 0) {
 			break

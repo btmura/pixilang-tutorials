@@ -1,7 +1,7 @@
 fn visual_init($svl) {
-	// Load an image to show for each module. 
+	// Load an image to show for each module.
 	module_pixi = must_load("module.png")
-	
+
 	// Set approximate dimensions to avoid drawing out of bounds.
 	module_pixi_width = 25
 	module_pixi_height = 25
@@ -14,12 +14,12 @@ fn visual_init($svl) {
 
 	module_x = new(module_count, 1, INT16)
 	module_y = new(module_count, 1, INT16)
-	
+
 	// Initialize min and max properties of the x and y containers. We need these properties,
 	// because we don't know what range of values Sunvox will provide to us.
 	module_x.min = INT_MAX
 	module_x.max = 0
-	
+
 	module_y.min = INT_MAX
 	module_y.max = 0
 
@@ -36,7 +36,7 @@ fn visual_init($svl) {
 			// Get the module color and convert it to what pixilang wants.
 			$color = dlcall($svl, sv_get_module_color, 0, $i)
 			module_color[$i] = get_color(
-				($color >> 0) & 255, 
+				($color >> 0) & 255,
 				($color >> 8) & 255,
 				($color >> 16) & 255)
 
@@ -52,9 +52,9 @@ fn visual_init($svl) {
 			module_y.min = min(module_y.min, module_y[$i])
 			module_y.max = max(module_y.max, module_y[$i])
 
-			printf("Module %2d  x: %3d  y: %3d  c: %8d  l: %2d\n", $i, 
-				module_x[$i], 
-				module_y[$i], 
+			printf("Module %2d  x: %3d  y: %3d  c: %8d  l: %2d\n", $i,
+				module_x[$i],
+				module_y[$i],
 				module_color[$i],
 				module_link_count[$i])
 		}
@@ -83,14 +83,14 @@ fn draw_modules($svl, $center_x, $center_y, $width, $height) {
 
 	$half_width = $width / 2
 	$half_height = $height / 2
-	
+
 	// Create containers for storing the final X and Y coordinates for all modules.
 	$x = new(module_count, 1, INT)
 	$y = new(module_count, 1, INT)
 
 	// Calculate the final X and Y coordinates for all modules.
 	$i = 0
-	while $i < module_count {	
+	while $i < module_count {
 		$x_edge = $center_x - $half_width
 		$y_edge = $center_y - $half_height
 
