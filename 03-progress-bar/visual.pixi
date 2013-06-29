@@ -1,0 +1,147 @@
+fn visual_init($svl) {
+	// Load an image to show for each module. 
+	module_pixi = must_load("module.png")
+	
+	// Set approximate dimensions to avoid drawing out of bounds.
+	module_pixi_width = 25
+	module_pixi_height = 25
+
+	// Allocate containers to hold info about every module.
+	module_count = dlcall($svl, sv_get_number_of_modules, 0)
+	module_exists = new(module_count, 1, INT)
+	module_link_count = new(module_count, 1, INT)
+	module_color = new(module_count, 1, PIXEL)
+
+	module_x = new(module_count, 1, INT16)
+	module_y = new(module_count, 1, INT16)
+	
+	// Initialize min and max properties of the x and y containers. We need these properties,
+	// because we don't know what range of values Sunvox will provide to us.
+	module_x.min = INT_MAX
+	module_x.max = 0
+	
+	module_y.min = INT_MAX
+	module_y.max = 0
+
+	$i = 0
+	while $i < module_count {
+		// Get the module flags and extract whether it exists and how many links it has.
+		$flags = dlcall($svl, sv_get_module_flags, 0, $i)
+		module_exists[$i] = ($flags & SV_MODULE_FLAG_EXISTS) != 0
+		module_link_count[$i] = ($flags & SV_MODULE_OUTPUTS_MASK) >> SV_MODULE_OUTPUTS_OFF
+
+		// Only record info about modules that exist. Module that don't exist don't have any position,
+		// so they can mess up our calculations.
+		if module_exists[$i] {
+			// Get the module color and convert it to what pixilang wants.
+			$color = dlcall($svl, sv_get_module_color, 0, $i)
+			module_color[$i] = get_color(
+				($color >> 0) & 255, 
+				($color >> 8) & 255,
+				($color >> 16) & 255)
+
+			// Get the module coordinates and split them into separate X and Y coordinates.
+			$xy = dlcall($svl, sv_get_module_xy, 0, $i)
+			module_x[$i] = $xy & 0xFFFF
+			module_y[$i] = $xy >> 16
+
+			// Update the min and max values for the x and y coordinates.
+			module_x.min = min(module_x.min, module_x[$i])
+			module_x.max = max(module_x.max, module_x[$i])
+
+			module_y.min = min(module_y.min, module_y[$i])
+			module_y.max = max(module_y.max, module_y[$i])
+
+			printf("Module %2d  x: %3d  y: %3d  c: %8d  l: %2d\n", $i, 
+				module_x[$i], 
+				module_y[$i], 
+				module_color[$i],
+				module_link_count[$i])
+		}
+
+		$i + 1
+	}
+
+	// Record the range of the min and max to make calculations easier later.
+	module_x.range = module_x.max - module_x.min
+	module_y.range = module_y.max - module_y.min
+}
+
+fn visual_draw($svl) {
+	clear()
+
+	// Draw the modules to take up the entire screen.
+	$screen = get_screen()
+	$width = get_xsize($screen)
+	$height = get_ysize($screen)
+	draw_modules($svl, 0, 0, $width, $height)
+}
+
+fn draw_modules($svl, $center_x, $center_y, $width, $height) {
+	$width = $width - module_pixi_width
+	$height = $height - module_pixi_height
+
+	$half_width = $width / 2
+	$half_height = $height / 2
+	
+	// Create containers for storing the final X and Y coordinates for all modules.
+	$x = new(module_count, 1, INT)
+	$y = new(module_count, 1, INT)
+
+	// Calculate the final X and Y coordinates for all modules.
+	$i = 0
+	while $i < module_count {	
+		$x_edge = $center_x - $half_width
+		$y_edge = $center_y - $half_height
+
+		$x_percent = (module_x[$i] - module_x.min) / module_x.range
+		$y_percent = (module_y[$i] - module_y.min) / module_y.range
+
+		$x[$i] = $x_edge + ($width * $x_percent)
+		$y[$i] = $y_edge + ($height * $y_percent)
+
+		$i + 1
+	}
+
+	// Draw the links between the modules if both ends exist.
+	$i = 0
+	while $i < module_count {
+		if module_exists[$i] && module_link_count[$i] {
+			$links = dlcall($svl, sv_get_module_outputs, 0, $i)
+			resize($links, module_link_count[$i], 1, INT32)
+
+			$j = 0
+			while $j < module_link_count[$i] {
+				$k = $links[$j]
+				if module_exists[$k] {
+					line($x[$i], $y[$i], $x[$k], $y[$k], WHITE)
+				}
+				$j + 1
+			}
+
+			remove($links)
+		}
+		$i + 1
+	}
+
+	// Draw the image for each module if it exists.
+	$i = 0
+	while $i < module_count {
+		if module_exists[$i] {
+			pixi(module_pixi, $x[$i], $y[$i], module_color[$i])
+		}
+		$i + 1
+	}
+
+	remove($x)
+	remove($y)
+}
+
+fn visual_deinit($svl) {
+	remove(module_pixi)
+	remove(module_exists)
+	remove(module_link_count)
+	remove(module_color)
+	remove(module_x)
+	remove(module_y)
+}
